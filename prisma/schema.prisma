@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DIRECT_DATABASE_URL")
+}
+
+model academicyears {
+  id          Int           @id @default(autoincrement())
+  year        DateTime?     @db.Date
+  createdAt   DateTime      @db.DateTime(0)
+  updatedAt   DateTime      @db.DateTime(0)
+  articles    articles[]
+  closeddates closeddates[]
+}
+
+model articles {
+  id             Int                    @id @default(autoincrement())
+  title          String?                @db.VarChar(255)
+  documentUrl    String?                @db.VarChar(255)
+  submittedDate  DateTime?              @db.DateTime(0)
+  reviewStatus   articles_reviewStatus?
+  userId         Int?
+  facultyId      Int?
+  academicYearId Int?
+  createdAt      DateTime               @db.DateTime(0)
+  updatedAt      DateTime               @db.DateTime(0)
+  users          users?                 @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "articles_ibfk_1")
+  faculties      faculties?             @relation(fields: [facultyId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "articles_ibfk_2")
+  academicyears  academicyears?         @relation(fields: [academicYearId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "articles_ibfk_3")
+
+  @@index([academicYearId], map: "academicYearId")
+  @@index([facultyId], map: "facultyId")
+  @@index([userId], map: "userId")
+}
+
+model closeddates {
+  id             Int            @id @default(autoincrement())
+  closingDate    DateTime?      @db.Date
+  academicYearId Int?
+  facultyId      Int?
+  createdAt      DateTime       @db.DateTime(0)
+  updatedAt      DateTime       @db.DateTime(0)
+  academicyears  academicyears? @relation(fields: [academicYearId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "closeddates_ibfk_1")
+  faculties      faculties?     @relation(fields: [facultyId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "closeddates_ibfk_2")
+
+  @@index([academicYearId], map: "academicYearId")
+  @@index([facultyId], map: "facultyId")
+}
+
+model faculties {
+  id             Int              @id @default(autoincrement())
+  name           String?          @db.VarChar(255)
+  createdAt      DateTime         @db.DateTime(0)
+  updatedAt      DateTime         @db.DateTime(0)
+  articles       articles[]
+  closeddates    closeddates[]
+  groupfaculties groupfaculties[]
+}
+
+model groupfaculties {
+  id        Int        @id @default(autoincrement())
+  groupId   Int?
+  facultyId Int?
+  createdAt DateTime   @db.DateTime(0)
+  updatedAt DateTime   @db.DateTime(0)
+  groups    groups?    @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "groupfaculties_ibfk_1")
+  faculties faculties? @relation(fields: [facultyId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "groupfaculties_ibfk_2")
+
+  @@index([facultyId], map: "facultyId")
+  @@index([groupId], map: "groupId")
+}
+
+model grouproles {
+  id        Int      @id @default(autoincrement())
+  groupId   Int?
+  roleId    Int?
+  createdAt DateTime @db.DateTime(0)
+  updatedAt DateTime @db.DateTime(0)
+  groups    groups?  @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "grouproles_ibfk_1")
+  roles     roles?   @relation(fields: [roleId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "grouproles_ibfk_2")
+
+  @@index([groupId], map: "groupId")
+  @@index([roleId], map: "roleId")
+}
+
+model groups {
+  id             Int              @id @default(autoincrement())
+  name           String?          @db.VarChar(255)
+  createdAt      DateTime         @db.DateTime(0)
+  updatedAt      DateTime         @db.DateTime(0)
+  groupfaculties groupfaculties[]
+  grouproles     grouproles[]
+  users          users[]
+}
+
+model roles {
+  id          Int          @id @default(autoincrement())
+  url         String?      @db.VarChar(255)
+  description String?      @db.VarChar(255)
+  createdAt   DateTime     @db.DateTime(0)
+  updatedAt   DateTime     @db.DateTime(0)
+  grouproles  grouproles[]
+}
+
+model users {
+  id        Int        @id @default(autoincrement())
+  username  String?    @db.VarChar(255)
+  email     String?    @db.VarChar(255)
+  password  String?    @db.VarChar(255)
+  groupId   Int?
+  createdAt DateTime   @db.DateTime(0)
+  updatedAt DateTime   @db.DateTime(0)
+  articles  articles[]
+  groups    groups?    @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_ibfk_1")
+
+  @@index([groupId], map: "groupId")
+}
+
+enum articles_reviewStatus {
+  Reviewing
+  Approve
+  Reject
+}
