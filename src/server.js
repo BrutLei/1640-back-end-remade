@@ -1,33 +1,24 @@
 import express from 'express';
-import initWebRoutes from './routes/helloWorldRoute.js';
-import { PrismaClient } from '@prisma/client';
-import { withAccelerate } from '@prisma/extension-accelerate';
+import faculty_router from './routes/facultyRoute.js';
+import user_router from './routes/userRoute.js';
+import cors from 'cors';
 
-const prisma = new PrismaClient().$extends(withAccelerate());
-
-const app = express();
 const port = 8080;
+const app = express();
+
+app.use(cors({ origin: 'http://localhost:3000' }));
 app.use(express.json());
 
-initWebRoutes(app);
+// Faculty route
+/**url: port/faculties/... */
+app.use('/faculties', faculty_router);
 
-app.post('/create/faculty', async (req, res) => {
-  const faculty = await prisma.faculties.create({
-    data: {
-      name: 'Computer Science',
-      createdAt: new Date(0),
-      updatedAt: new Date(0),
-    },
-  });
-  if (faculty) {
-    res.status(200).send('Create new faculty successfully');
-  }
-});
+// Faculty route
+/**url: port/users/... */
+app.use('/users', user_router);
 
-app.get('/faculties', async (req, res, next) => {
-  const faculties = await prisma.faculties.findMany();
-  console.log(faculties);
-  res.status(202).send({ faculties });
+app.get('/', (req, res) => {
+  return res.status(200).send('Hello World');
 });
 
 app.listen(port, () => {
