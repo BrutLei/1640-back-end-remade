@@ -9,15 +9,26 @@ const fetchAllFaculties = async (req, res) => {
 };
 
 const createNewFaculty = async (req, res) => {
-  const result = await prisma.faculties.create({
-    data: {
-      name: req.body.name,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  });
-  if (result) {
-    return res.status(200).send('Create new faculty successfully');
+  let name = req.body.name;
+  const existingFaculty = await prisma.faculties.findFirst({ where: { name: req.body.name } });
+  if (existingFaculty) {
+    return res.status(400).json({ error: 'Faculty already exists' });
+  }
+
+  let result = '';
+  if (name) {
+    result = await prisma.faculties.create({
+      data: {
+        name: name,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
+  if (result && name) {
+    return res.status(200).json({ message: 'create new user successful', ...result });
+  } else if (!name) {
+    return res.status(418).send('Missing name in request body');
   } else {
     return res.status(404).send('Failed when create new faculty');
   }

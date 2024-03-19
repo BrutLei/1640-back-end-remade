@@ -13,7 +13,7 @@ app.use(express.json());
 /**url: port/faculties/... */
 app.use('/faculties', faculty_router);
 
-// Faculty route
+// User route
 /**url: port/users/... */
 app.use('/users', user_router);
 
@@ -22,5 +22,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server is listening on port ${port} open: http://localhost:${8080}`);
+  console.log(`Server is listening on port ${port} open: http://localhost:${port}`);
 });

@@ -14,7 +14,6 @@
     "@babel/core": "^7.15.4",
     "@babel/node": "^7.15.4",
     "@babel/preset-env": "^7.15.4",
-    "@prisma/client": "^5.11.0",
     "@prisma/extension-accelerate": "^1.0.0",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",

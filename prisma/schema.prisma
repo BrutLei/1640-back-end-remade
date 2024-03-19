@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DIRECT_DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 model academicyears {
@@ -51,26 +51,13 @@ model closeddates {
 }
 
 model faculties {
-  id             Int              @id @default(autoincrement())
-  name           String?          @db.VarChar(255)
-  createdAt      DateTime         @db.DateTime(0)
-  updatedAt      DateTime         @db.DateTime(0)
-  articles       articles[]
-  closeddates    closeddates[]
-  groupfaculties groupfaculties[]
-}
-
-model groupfaculties {
-  id        Int        @id @default(autoincrement())
-  groupId   Int?
-  facultyId Int?
-  createdAt DateTime   @db.DateTime(0)
-  updatedAt DateTime   @db.DateTime(0)
-  groups    groups?    @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "groupfaculties_ibfk_1")
-  faculties faculties? @relation(fields: [facultyId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "groupfaculties_ibfk_2")
-
-  @@index([facultyId], map: "facultyId")
-  @@index([groupId], map: "groupId")
+  id          Int           @id @default(autoincrement())
+  name        String?       @db.VarChar(255)
+  createdAt   DateTime      @db.DateTime(0)
+  updatedAt   DateTime      @db.DateTime(0)
+  articles    articles[]
+  closeddates closeddates[]
+  users       users[]
 }
 
 model grouproles {
@@ -87,13 +74,12 @@ model grouproles {
 }
 
 model groups {
-  id             Int              @id @default(autoincrement())
-  name           String?          @db.VarChar(255)
-  createdAt      DateTime         @db.DateTime(0)
-  updatedAt      DateTime         @db.DateTime(0)
-  groupfaculties groupfaculties[]
-  grouproles     grouproles[]
-  users          users[]
+  id         Int          @id @default(autoincrement())
+  name       String?      @db.VarChar(255)
+  createdAt  DateTime     @db.DateTime(0)
+  updatedAt  DateTime     @db.DateTime(0)
+  grouproles grouproles[]
+  users      users[]
 }
 
 model roles {
@@ -110,11 +96,14 @@ model users {
   username  String?    @db.VarChar(255)
   email     String?    @db.VarChar(255)
   password  String?    @db.VarChar(255)
-  groupId   Int?
   createdAt DateTime   @db.DateTime(0)
   updatedAt DateTime   @db.DateTime(0)
   articles  articles[]
-  groups    groups?    @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_ibfk_1")
+  facultyId Int?
+  groupId   Int?
+
+  faculty faculties? @relation(fields: [facultyId], references: [id])
+  groups  groups?    @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_ibfk_1")
 
   @@index([groupId], map: "groupId")
 }

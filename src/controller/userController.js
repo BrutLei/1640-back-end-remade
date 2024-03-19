@@ -16,31 +16,53 @@ const fetchAllUsers = async (req, res) => {
 };
 
 const createNewUser = async (req, res) => {
+  const { email, username, password, groupId, facultyId } = req.body;
   let saltRounds = 10;
-  const salt = await bcrypt.genSaltSync(saltRounds);
-
-  let unHashedPass = req.body.password;
-  let hashedPassword = await bcrypt.hashSync(unHashedPass, salt);
+  const salt = bcrypt.genSaltSync(saltRounds);
+  let unHashedPass = password;
+  let hashedPassword = bcrypt.hashSync(unHashedPass, salt);
 
   try {
-    const user = await prisma.users.create({
+    const existingEmail = await prisma.users.findFirst({ where: { email: email } });
+    const existingGroup = await prisma.groups.findFirst({ where: { id: groupId } });
+    const existingFaculty = await prisma.faculties.findFirst({ where: { id: facultyId } });
+
+    if (existingEmail) {
+      return res.status(400).json({ error: 'email already used' });
+    }
+
+    let user = await prisma.users.create({
       data: {
-        username: req.body.username,
-        email: req.body.email,
+        email: email,
+        username: username,
         password: hashedPassword,
-        groupId: req.body.groupId,
+        groupId: existingGroup ? groupId : undefined,
+        facultyId: existingFaculty ? facultyId : undefined,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
     });
     if (user) {
-      return res.status(200).send('Create new user successfully');
-    } else {
-      return res.status(404).send('Failed when create new user');
+      return res.status(202).json({ message: ' Create new user successfull', ...user });
     }
-  } catch (error) {
-    console.log(error);
+  } catch (e) {
+    if (e) {
+      // The .code property can be accessed in a type-safe manner
+      if (e.code === 'P2002') {
+        console.log('There is a unique constraint violation, a new user cannot be created with this email');
+      }
+    }
+    throw e;
   }
 };
 
-export { fetchAllUsers, createNewUser };
+const deleteUser = async (req, res) => {
+  const result = await prisma.users.delete({ where: { id: parseInt(req.params.id) } });
+  if (result) {
+    return res.status(200).send(`Deleted a user successfully\n`);
+  } else {
+    return res.status(404).send('Failed when delete user');
+  }
+};
+
+export { fetchAllUsers, createNewUser, deleteUser };
