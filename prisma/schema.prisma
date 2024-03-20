@@ -96,16 +96,16 @@ model users {
   username  String?    @db.VarChar(255)
   email     String?    @db.VarChar(255)
   password  String?    @db.VarChar(255)
+  groupId   Int?
   createdAt DateTime   @db.DateTime(0)
   updatedAt DateTime   @db.DateTime(0)
-  articles  articles[]
   facultyId Int?
-  groupId   Int?
-
-  faculty faculties? @relation(fields: [facultyId], references: [id])
-  groups  groups?    @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_ibfk_1")
+  articles  articles[]
+  faculty   faculties? @relation(fields: [facultyId], references: [id])
+  groups    groups?    @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_ibfk_1")
 
   @@index([groupId], map: "groupId")
+  @@index([facultyId], map: "users_facultyId_fkey")
 }
 
 enum articles_reviewStatus {

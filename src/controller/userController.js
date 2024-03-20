@@ -48,7 +48,7 @@ const createNewUser = async (req, res) => {
   } catch (e) {
     if (e) {
       // The .code property can be accessed in a type-safe manner
-      if (e.code === 'P2002') {
+      if (e.cod) {
         console.log('There is a unique constraint violation, a new user cannot be created with this email');
       }
     }
@@ -65,4 +65,35 @@ const deleteUser = async (req, res) => {
   }
 };
 
-export { fetchAllUsers, createNewUser, deleteUser };
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // 1. Validate user input (optional)
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    // 2. Find user by email using Prisma
+    const user = await prisma.users.findFirst({
+      where: { email },
+    });
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+    // 3. Compare hashed passwords securely using bcrypt
+    const isPasswordMatch = await bcrypt.compareSync(password, user.password);
+    if (!isPasswordMatch) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+    // 4. Login successful (optional: generate and send JWT)
+    // Replace with your authentication logic (e.g., JWT generation)
+
+    res.json({ message: 'Login successful' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export { fetchAllUsers, createNewUser, deleteUser, login };
