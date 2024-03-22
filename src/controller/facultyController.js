@@ -26,7 +26,7 @@ const createNewFaculty = async (req, res) => {
     });
   }
   if (result && name) {
-    return res.status(200).json({ message: 'create new user successful', ...result });
+    return res.status(200).json({ message: 'create new Faculty successful', ...result });
   } else if (!name) {
     return res.status(418).send('Missing name in request body');
   } else {

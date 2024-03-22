@@ -19,8 +19,6 @@ const createNewUser = async (req, res) => {
   const { email, username, password, groupId, facultyId } = req.body;
   let saltRounds = 10;
   const salt = bcrypt.genSaltSync(saltRounds);
-  let unHashedPass = password;
-  let hashedPassword = bcrypt.hashSync(unHashedPass, salt);
 
   try {
     const existingEmail = await prisma.users.findFirst({ where: { email: email } });
@@ -28,7 +26,19 @@ const createNewUser = async (req, res) => {
     const existingFaculty = await prisma.faculties.findFirst({ where: { id: facultyId } });
 
     if (existingEmail) {
-      return res.status(400).json({ error: 'email already used' });
+      return res.status(400).json({
+        MS: 'email already used', // MS
+        EC: '1', //error code
+        DT: '', //data
+      });
+    }
+
+    let hashedPassword = '';
+    try {
+      let unHashedPass = password;
+      hashedPassword = bcrypt.hashSync(unHashedPass, salt);
+    } catch (error) {
+      throw error;
     }
 
     let user = await prisma.users.create({
@@ -43,16 +53,21 @@ const createNewUser = async (req, res) => {
       },
     });
     if (user) {
-      return res.status(202).json({ message: ' Create new user successfull', ...user });
+      return res.status(202).json({
+        MS: ' Create new user successfull',
+        EC: '0',
+        DT: {
+          username: user.username,
+          email: user.email,
+        },
+      });
     }
   } catch (e) {
-    if (e) {
-      // The .code property can be accessed in a type-safe manner
-      if (e.cod) {
-        console.log('There is a unique constraint violation, a new user cannot be created with this email');
-      }
-    }
-    throw e;
+    return res.status(400).json({
+      MS: e.MS,
+      EC: e.name,
+      DT: '',
+    });
   }
 };
 
@@ -71,7 +86,11 @@ const login = async (req, res) => {
 
     // 1. Validate user input (optional)
     if (!email || !password) {
-      return res.status(400).json({ message: 'Missing required fields' });
+      return res.status(400).json({
+        MS: 'Missing required fields',
+        EC: '2',
+        DT: '',
+      });
     }
 
     // 2. Find user by email using Prisma
@@ -79,20 +98,55 @@ const login = async (req, res) => {
       where: { email },
     });
     if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      return res.status(401).json({
+        MS: 'Invalid email or password',
+        EC: '3',
+        DT: '',
+      });
     }
     // 3. Compare hashed passwords securely using bcrypt
-    const isPasswordMatch = await bcrypt.compareSync(password, user.password);
+    const isPasswordMatch = bcrypt.compareSync(password, user.password);
     if (!isPasswordMatch) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      return res.status(401).json({
+        MS: 'Invalid email or password',
+        EC: '2',
+        DT: '',
+      });
     }
     // 4. Login successful (optional: generate and send JWT)
-    // Replace with your authentication logic (e.g., JWT generation)
+    //Replace with your authentication logic (e.g., JWT generation)
 
-    res.json({ message: 'Login successful' });
+    // Checking if user belong to faculty
+    if (user.facultyId) {
+      const facultyData = await prisma.faculties.findUnique({ where: { id: user.facultyId } });
+
+      res.json({
+        MS: 'Login successful',
+        EC: '0',
+        DT: {
+          faculty: {
+            name: facultyData.name,
+          },
+          user: {
+            name: user.username,
+            email: user.email,
+          },
+        },
+      });
+    } else {
+      console.log('User do not have specific faculty// not belong to any facuty');
+      res.json({
+        MS: 'Login successful',
+        EC: '0-1',
+        DT: null,
+      });
+    }
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({
+      MS: 'Internal server error',
+      EC: '3',
+      DT: '',
+    });
   }
 };
 
