@@ -1,13 +1,21 @@
 import { PrismaClient } from '@prisma/client';
 import { withAccelerate } from '@prisma/extension-accelerate';
 import bcrypt from 'bcrypt';
+import { generateJwt, generateRefreshJwt, verifyToken } from '../middleware/JWTGenerate';
 
 const prisma = new PrismaClient().$extends(withAccelerate());
+
+let saltRounds = 10;
+const salt = bcrypt.genSaltSync(saltRounds);
+const hashPassword = (password) => {
+  let hashedPassword = bcrypt.hashSync(password, salt);
+  return hashedPassword;
+};
 
 const fetchAllUsers = async (req, res) => {
   try {
     let users = await prisma.users.findMany();
-    console.log(users);
+
     return res.status(200).json(users);
   } catch (error) {
     console.log(error);
@@ -17,13 +25,19 @@ const fetchAllUsers = async (req, res) => {
 
 const createNewUser = async (req, res) => {
   const { email, username, password, groupId, facultyId } = req.body;
-  let saltRounds = 10;
-  const salt = bcrypt.genSaltSync(saltRounds);
 
   try {
     const existingEmail = await prisma.users.findFirst({ where: { email: email } });
-    const existingGroup = await prisma.groups.findFirst({ where: { id: groupId } });
-    const existingFaculty = await prisma.faculties.findFirst({ where: { id: facultyId } });
+
+    let existingGroup = undefined;
+    if (groupId) {
+      existingGroup = await prisma.groups.findFirst({ where: { id: parseInt(groupId) } });
+    }
+
+    let existingFaculty = undefined;
+    if (facultyId) {
+      existingFaculty = await prisma.faculties.findFirst({ where: { id: parseInt(facultyId) } });
+    }
 
     if (existingEmail) {
       return res.status(400).json({
@@ -36,18 +50,17 @@ const createNewUser = async (req, res) => {
     let hashedPassword = '';
     try {
       let unHashedPass = password;
-      hashedPassword = bcrypt.hashSync(unHashedPass, salt);
+      hashedPassword = hashPassword(unHashedPass);
     } catch (error) {
       throw error;
     }
-
     let user = await prisma.users.create({
       data: {
         email: email,
         username: username,
         password: hashedPassword,
-        groupId: existingGroup ? groupId : undefined,
-        facultyId: existingFaculty ? facultyId : undefined,
+        groupId: existingGroup ? parseInt(groupId) : undefined,
+        facultyId: existingFaculty ? parseInt(facultyId) : undefined,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -63,6 +76,7 @@ const createNewUser = async (req, res) => {
       });
     }
   } catch (e) {
+    throw e;
     return res.status(400).json({
       MS: e.MS,
       EC: e.name,
@@ -109,39 +123,58 @@ const login = async (req, res) => {
     if (!isPasswordMatch) {
       return res.status(401).json({
         MS: 'Invalid email or password',
-        EC: '2',
+        EC: '4',
         DT: '',
       });
     }
     // 4. Login successful (optional: generate and send JWT)
     //Replace with your authentication logic (e.g., JWT generation)
-
     // Checking if user belong to faculty
     if (user.facultyId) {
       const facultyData = await prisma.faculties.findUnique({ where: { id: user.facultyId } });
+      const groupData = await prisma.groups.findUnique({ where: { id: user.groupId } });
+      const payload = {
+        id: user.id,
+        name: user.username,
+        email: user.email,
+        group: groupData.name,
+        faculty: facultyData.name,
+      };
+      // set refresh token inside cookie
 
-      res.json({
+      // response token to user through basic flow
+      let token = generateJwt({ ...payload });
+      res.status(200).json({
         MS: 'Login successful',
-        EC: '0',
+        EC: '0-1',
         DT: {
-          faculty: {
-            name: facultyData.name,
-          },
-          user: {
-            name: user.username,
-            email: user.email,
-          },
+          accessToken: token,
+          // refreshToken: refreshToken,
         },
       });
     } else {
-      console.log('User do not have specific faculty// not belong to any facuty');
-      res.json({
+      const groupData = await prisma.groups.findUnique({ where: { id: user.groupId } });
+      const payload = {
+        id: user.id,
+        name: user.username,
+        email: user.email,
+        group: groupData.name,
+      };
+      // set refresh token inside cookie
+
+      // response token to user through basic flow
+      let token = generateJwt({ ...payload });
+      res.status(200).json({
         MS: 'Login successful',
-        EC: '0-1',
-        DT: null,
+        EC: '0-2',
+        DT: {
+          accessToken: token,
+          // refreshToken: refreshToken,
+        },
       });
     }
   } catch (error) {
+    // throw error;
     res.status(500).json({
       MS: 'Internal server error',
       EC: '3',
@@ -150,4 +183,83 @@ const login = async (req, res) => {
   }
 };
 
-export { fetchAllUsers, createNewUser, deleteUser, login };
+const updateUser = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const user = await prisma.users.findUnique({
+      where: {
+        id: parseInt(id),
+      },
+    });
+    const { username, email } = req.body;
+    const password = hashPassword(req.body.password);
+    const result = await prisma.users.update({
+      where: {
+        id: parseInt(id),
+      },
+      data: {
+        ...user,
+        username,
+        email,
+        password: password,
+        updatedAt: new Date(),
+      },
+    });
+    if (result) {
+      return res.status(200).send('update msg successfully');
+    }
+  } catch (error) {
+    throw error;
+    return res.status(400).json({
+      message: error,
+    });
+  }
+};
+
+const getDetailUser = async (req, res) => {
+  const id = parseInt(req.params.id);
+  try {
+    const user = await prisma.users.findUnique({ where: { id: id } });
+    let faculty = null;
+    if (user.facultyId) {
+      faculty = await prisma.faculties.findUnique({ where: { id: user.facultyId } });
+    }
+    let groupName = '';
+    if (user.groupId) {
+      const group = await prisma.groups.findUnique({ where: { id: user.groupId } });
+      groupName = group.name;
+    }
+    if (user) {
+      res.status(200).json({
+        id: user.id,
+        avatar: user.avatar,
+        username: user.username,
+        email: user.email,
+        group: groupName,
+        faculty: faculty ? faculty.name : 'no faculty',
+      });
+    }
+  } catch (error) {
+    // throw error;
+    res.status(400).json({
+      message: 'server error',
+      code: error.code,
+    });
+  }
+};
+
+const logout = async (req, res) => {
+  try {
+    res.clearCookie('refresh_token');
+    return res.status(200).json({
+      status: 'OK',
+      message: 'Logout successfully',
+    });
+  } catch (e) {
+    return res.status(404).json({
+      message: e,
+    });
+  }
+};
+
+export { fetchAllUsers, createNewUser, deleteUser, login, updateUser, getDetailUser, logout };

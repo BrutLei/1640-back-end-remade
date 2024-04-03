@@ -1,13 +1,18 @@
 import express from 'express';
 import faculty_router from './routes/facultyRoute.js';
 import user_router from './routes/userRoute.js';
+import year_router from './routes/yearRoute.js';
+import close_date_route from './routes/closeDateRoute.js';
+import group_route from './routes/groupRoute.js';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 
 const port = 8080;
 const app = express();
 
-app.use(cors({ origin: 'http://localhost:3000' }));
+app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 app.use(express.json());
+app.use(cookieParser());
 
 // Faculty route
 /**url: port/faculties/... */
@@ -17,8 +22,24 @@ app.use('/faculties', faculty_router);
 /**url: port/users/... */
 app.use('/users', user_router);
 
+// Year route
+/**url: port/years/... */
+app.use('/years', year_router);
+
+// Year route
+/**url: port/years/... */
+app.use('/closedates', close_date_route);
+
+// Group route
+/**url: port/years/... */
+app.use('/groups', group_route);
+
 app.get('/', (req, res) => {
   return res.status(200).send('Hello World');
+});
+
+app.use((req, res) => {
+  return res.status(404).send('404 not found');
 });
 
 app.listen(port, () => {

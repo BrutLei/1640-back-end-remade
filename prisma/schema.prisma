@@ -93,6 +93,7 @@ model roles {
 
 model users {
   id        Int        @id @default(autoincrement())
+  avatar    String?    @db.VarChar(255)
   username  String?    @db.VarChar(255)
   email     String?    @db.VarChar(255)
   password  String?    @db.VarChar(255)
