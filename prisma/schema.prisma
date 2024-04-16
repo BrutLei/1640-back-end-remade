@@ -19,7 +19,7 @@ model academicyears {
 model articles {
   id             Int                    @id @default(autoincrement())
   title          String?                @db.VarChar(255)
-  documentUrl    String?                @db.VarChar(255)
+  documentFile   String?                @db.VarChar(255)
   submittedDate  DateTime?              @db.DateTime(0)
   reviewStatus   articles_reviewStatus?
   userId         Int?

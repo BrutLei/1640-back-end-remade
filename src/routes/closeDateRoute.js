@@ -4,11 +4,13 @@ import {
   createNewCloseDates,
   deleteCloseDates,
   updateCloseDates,
+  fetchingFacultyCloseDate,
 } from '../controller/closeDateController';
 
 const close_date_route = express.Router();
 
 close_date_route.get('/', fetchAllCloseDates);
+close_date_route.get('/faculty/:id', fetchingFacultyCloseDate);
 close_date_route.post('/create', createNewCloseDates);
 close_date_route.put('/update/:id', updateCloseDates);
 close_date_route.delete('/delete/:id', deleteCloseDates);

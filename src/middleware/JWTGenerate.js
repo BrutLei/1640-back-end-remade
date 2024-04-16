@@ -36,7 +36,6 @@ const verifyToken = (req, res, next) => {
       const payload = user;
       // console.log(payload);
       if (payload.group === 'admin') {
-        console.log('admin');
         next();
       } else if (payload.group === 'student') {
         // console.log('student');

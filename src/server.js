@@ -6,6 +6,7 @@ import close_date_route from './routes/closeDateRoute.js';
 import group_route from './routes/groupRoute.js';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import article_route from './routes/articleRoute.js';
 
 const port = 8080;
 const app = express();
@@ -27,19 +28,27 @@ app.use('/users', user_router);
 app.use('/years', year_router);
 
 // Year route
-/**url: port/years/... */
+/**url: port/closedates/... */
 app.use('/closedates', close_date_route);
 
 // Group route
-/**url: port/years/... */
+/**url: port/groups/... */
 app.use('/groups', group_route);
+
+// Article route
+/**url: port/groups/... */
+app.use('/articles', article_route);
 
 app.get('/', (req, res) => {
   return res.status(200).send('Hello World');
 });
 
-app.use((req, res) => {
-  return res.status(404).send('404 not found');
+app.post('/download', (req, res) => {
+  const { path } = req.body;
+  console.log(path);
+  if (path) {
+    res.download(path);
+  }
 });
 
 app.listen(port, () => {

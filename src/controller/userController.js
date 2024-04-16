@@ -138,7 +138,7 @@ const login = async (req, res) => {
         name: user.username,
         email: user.email,
         group: groupData.name,
-        faculty: facultyData.name,
+        faculty: facultyData,
       };
       // set refresh token inside cookie
 
@@ -236,7 +236,7 @@ const getDetailUser = async (req, res) => {
         username: user.username,
         email: user.email,
         group: groupName,
-        faculty: faculty ? faculty.name : 'no faculty',
+        faculty: faculty ? faculty : 'no faculty',
       });
     }
   } catch (error) {

@@ -6,7 +6,11 @@ const prisma = new PrismaClient().$extends(withAccelerate());
 const fetchAllYears = async (req, res) => {
   let years = await prisma.academicyears.findMany();
   if (years) {
-    return res.status(200).json(years);
+    const onlyYears = years.map((year) => {
+      return { ...year, year: year.year.getFullYear() };
+    });
+    console.log(onlyYears);
+    return res.status(200).json(onlyYears);
   } else {
     return res.status(400).send('There are no any years in DB');
   }
