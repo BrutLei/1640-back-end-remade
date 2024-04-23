@@ -1,8 +1,22 @@
 import { PrismaClient } from '@prisma/client';
 import { withAccelerate } from '@prisma/extension-accelerate';
-import multer from 'multer';
 
 const prisma = new PrismaClient().$extends(withAccelerate());
+
+const fetchSingleArticle = async (req, res) => {
+  const artId = parseInt(req.params.id);
+  try {
+    const article = await prisma.articles.findUnique({ where: { id: artId } });
+    if (article) {
+      return res.status(200).send(article);
+    } else {
+      return res.status(400).send('Article Not Exist');
+    }
+  } catch (error) {
+    // throw error;
+    return res.status(400).send('There are error from server');
+  }
+};
 
 const fetchAllArticle = async (req, res) => {
   let articles = await prisma.articles.findMany();
@@ -32,7 +46,17 @@ const fetchAllFacultyArticle = async (req, res) => {
       const existingFac = await prisma.faculties.findUnique({ where: { id: parseInt(facultyId) } });
       if (existingFac) {
         const articles = await prisma.articles.findMany({ where: { facultyId: parseInt(facultyId) } });
-        return res.status(200).json(articles);
+        if (articles) {
+          const newArticles = await Promise.all(
+            articles.map(async (e) => {
+              const faculty = await prisma.faculties.findFirst({ where: { id: e.facultyId } });
+              return { ...e, faculty_name: faculty.name };
+            }),
+          );
+          if (newArticles) {
+            return res.status(200).json(newArticles);
+          }
+        }
       } else {
         return res.status(400).send(`Faculty you're looking for is not exist`);
       }
@@ -62,35 +86,38 @@ const fetchAllUserArticle = async (req, res) => {
 // const downloadArticle
 
 const createNewArticle = async (req, res) => {
-  let articleTitle = req.body.title;
+  if (req.files) {
+    console.log('\nUpload successfully ->>> ', req.files.file[0].path);
+    console.log('\nUpload successfully ->>> ', req.files.image[0].path);
+
+    // return res.status(200).send(req.files.image[0].path);
+  }
+  let articleDescription = req.body.desc;
   let date = req.body.date;
+  let comment = req.body.cmt;
   let status = req.body.status;
   let userId = req.body.uId;
   let facultyId = req.body.fId;
   let yearId = req.body.yId;
-  console.log('line 63->>>', req.file.path);
-  let file = req.file.path;
+  let file = req.files.file[0].path;
+  let image = req.files.image[0].path;
   try {
-    const existingTitle = await prisma.articles.findFirst({ where: { title: articleTitle } });
-    if (existingTitle) {
-      return res.status(404).send('Article Title existed');
-    } else {
-      const result = await prisma.articles.create({
-        data: {
-          title: articleTitle,
-          documentFile: file,
-          submittedDate: new Date(),
-          userId: parseInt(userId),
-          facultyId: parseInt(facultyId),
-          academicYearId: parseInt(yearId),
-          reviewStatus: status,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      });
-      return res.status(200).json(result);
-    }
-    return res.status(200).send('test api');
+    const result = await prisma.articles.create({
+      data: {
+        shortDescription: articleDescription,
+        documentFile: file,
+        comment: comment,
+        imageFile: image,
+        submittedDate: new Date(date),
+        userId: parseInt(userId),
+        facultyId: parseInt(facultyId),
+        academicYearId: parseInt(yearId),
+        reviewStatus: status,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+    return res.status(200).json(result);
   } catch (error) {
     console.error(error);
     throw error;
@@ -102,7 +129,7 @@ const updateArticle = async (req, res) => {
   const status = req.body.status;
   try {
     const existingArt = await prisma.articles.findUnique({ where: { id: parseInt(artId) } });
-    console.log(existingArt);
+    // console.log(existingArt);
     if (existingArt) {
       const articleUpdated = await prisma.articles.update({
         where: {
@@ -111,6 +138,33 @@ const updateArticle = async (req, res) => {
         data: {
           ...existingArt,
           reviewStatus: status,
+        },
+      });
+      return res.status(200).json(articleUpdated);
+    } else {
+      return res.status(400).send('Article do not exist');
+    }
+  } catch (error) {
+    throw error;
+  }
+};
+const commentArticle = async (req, res) => {
+  const artId = req.params.id;
+  const cmt = req.body.comment;
+  if (!cmt) {
+    return res.status(500).send('Comment content is required');
+  }
+  try {
+    const existingArt = await prisma.articles.findUnique({ where: { id: parseInt(artId) } });
+    // console.log(existingArt);
+    if (existingArt) {
+      const articleUpdated = await prisma.articles.update({
+        where: {
+          id: parseInt(artId),
+        },
+        data: {
+          ...existingArt,
+          comment: cmt,
         },
       });
       return res.status(200).json(articleUpdated);
@@ -137,4 +191,29 @@ const deleteArticle = async (req, res) => {
   }
 };
 
-export { fetchAllArticle, fetchAllFacultyArticle, fetchAllUserArticle, createNewArticle, updateArticle, deleteArticle };
+const countArticlePerFact = async (req, res) => {
+  try {
+    const result1 = await prisma.articles.findMany();
+    const result = await prisma.articles.groupBy({
+      by: ['name'],
+      _count: {
+        id: true,
+      },
+    });
+
+    return res.status(200).json(result);
+  } catch (error) {
+    throw error;
+  }
+};
+
+export {
+  fetchAllArticle,
+  fetchAllFacultyArticle,
+  fetchAllUserArticle,
+  createNewArticle,
+  updateArticle,
+  deleteArticle,
+  commentArticle,
+  fetchSingleArticle,
+};

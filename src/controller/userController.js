@@ -13,10 +13,33 @@ const hashPassword = (password) => {
 };
 
 const fetchAllUsers = async (req, res) => {
+  let users = await prisma.users.findMany();
   try {
-    let users = await prisma.users.findMany();
-
-    return res.status(200).json(users);
+    if (users) {
+      const userList = await Promise.all(
+        users.map(async (user) => {
+          let faculty = null;
+          let group = null;
+          if (user.facultyId) {
+            faculty = await prisma.faculties.findFirst({ where: { id: user.facultyId } });
+          }
+          if (user.groupId) {
+            group = await prisma.groups.findFirst({ where: { id: user.groupId } });
+          }
+          return {
+            id: user.id,
+            avatar: user.avatar,
+            username: user.username,
+            email: user.email,
+            group: group == null ? 'NOT' : group.name,
+            faculty: faculty == null ? 'NOT' : faculty.name,
+          };
+        }),
+      );
+      if (userList) {
+        return res.status(200).json(userList);
+      }
+    }
   } catch (error) {
     console.log(error);
     return res.status(500).send('Cannot fetch user data');
@@ -191,8 +214,11 @@ const updateUser = async (req, res) => {
         id: parseInt(id),
       },
     });
-    const { username, email } = req.body;
-    const password = hashPassword(req.body.password);
+    const { username, email, facultyId, groupId } = req.body;
+    const fId = parseInt(facultyId);
+    const gId = parseInt(groupId);
+
+    // const password = hashPassword(req.body.password);
     const result = await prisma.users.update({
       where: {
         id: parseInt(id),
@@ -201,12 +227,22 @@ const updateUser = async (req, res) => {
         ...user,
         username,
         email,
-        password: password,
+        facultyId: fId,
+        groupId: gId,
+        // password: password,
         updatedAt: new Date(),
       },
     });
     if (result) {
-      return res.status(200).send('update msg successfully');
+      return res.status(200).json({
+        message: 'update user info successfully',
+        data: {
+          username: result.username,
+          email: result.email,
+          groupId: result.groupId,
+          facultyId: result.facultyId,
+        },
+      });
     }
   } catch (error) {
     throw error;

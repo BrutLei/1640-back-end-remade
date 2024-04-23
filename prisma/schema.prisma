@@ -17,19 +17,21 @@ model academicyears {
 }
 
 model articles {
-  id             Int                    @id @default(autoincrement())
-  title          String?                @db.VarChar(255)
-  documentFile   String?                @db.VarChar(255)
-  submittedDate  DateTime?              @db.DateTime(0)
-  reviewStatus   articles_reviewStatus?
-  userId         Int?
-  facultyId      Int?
-  academicYearId Int?
-  createdAt      DateTime               @db.DateTime(0)
-  updatedAt      DateTime               @db.DateTime(0)
-  users          users?                 @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "articles_ibfk_1")
-  faculties      faculties?             @relation(fields: [facultyId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "articles_ibfk_2")
-  academicyears  academicyears?         @relation(fields: [academicYearId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "articles_ibfk_3")
+  id               Int                    @id @default(autoincrement())
+  shortDescription String?                @db.VarChar(255)
+  comment          String?                @db.VarChar(255)
+  imageFile        String?                @db.VarChar(255)
+  documentFile     String?                @db.VarChar(255)
+  submittedDate    DateTime?              @db.DateTime(0)
+  reviewStatus     articles_reviewStatus?
+  userId           Int?
+  facultyId        Int?
+  academicYearId   Int?
+  createdAt        DateTime               @db.DateTime(0)
+  updatedAt        DateTime               @db.DateTime(0)
+  users            users?                 @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "articles_ibfk_1")
+  faculties        faculties?             @relation(fields: [facultyId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "articles_ibfk_2")
+  academicyears    academicyears?         @relation(fields: [academicYearId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "articles_ibfk_3")
 
   @@index([academicYearId], map: "academicYearId")
   @@index([facultyId], map: "facultyId")

@@ -7,6 +7,7 @@ import group_route from './routes/groupRoute.js';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import article_route from './routes/articleRoute.js';
+import path, { dirname } from 'path';
 
 const port = 8080;
 const app = express();
@@ -48,8 +49,27 @@ app.post('/download', (req, res) => {
   console.log(path);
   if (path) {
     res.download(path);
+    res.attachment;
   }
 });
+app.use('/images', express.static('uploadsArticle'));
+
+// app.get('/images', (req, res) => {
+//   const imagePath = path.dirname('./uploadsArticle/1713422209248-Authorize_module.png'); // Adjust path if using a different storage solution
+//   return res.status(418).send(imagePath);
+
+//   try {
+//     if (!fs.existsSync(imagePath)) {
+//       throw new Error('Image not found');
+//     }
+//     const imageData = fs.readFileSync(imagePath); // Adjust for reading from storage
+
+//     res.setHeader('Content-Type', 'image/jpeg'); // Set appropriate content type
+//     res.send(imageData);
+//   } catch (error) {
+//     res.status(404).send('Image not found');
+//   }
+// });
 
 app.listen(port, () => {
   console.log(`Server is listening on port ${port} open: http://localhost:${port}`);

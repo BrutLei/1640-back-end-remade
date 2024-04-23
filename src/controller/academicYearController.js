@@ -3,13 +3,23 @@ import { withAccelerate } from '@prisma/extension-accelerate';
 
 const prisma = new PrismaClient().$extends(withAccelerate());
 
+const fetchingDetailYear = async (req, res) => {
+  const yearId = req.params.id;
+  let year = await prisma.academicyears.findFirst({ where: { id: parseInt(yearId) } });
+  if (year) {
+    return res.status(200).send(year.year);
+  } else {
+    return res.status(400).send(false);
+  }
+};
+
 const fetchAllYears = async (req, res) => {
   let years = await prisma.academicyears.findMany();
   if (years) {
     const onlyYears = years.map((year) => {
       return { ...year, year: year.year.getFullYear() };
     });
-    console.log(onlyYears);
+    // console.log(onlyYears);
     return res.status(200).json(onlyYears);
   } else {
     return res.status(400).send('There are no any years in DB');
@@ -92,4 +102,4 @@ const updateyear = async (req, res) => {
   }
 };
 
-export { fetchAllYears, createNewYear, deleteYear, updateyear };
+export { fetchAllYears, createNewYear, deleteYear, updateyear, fetchingDetailYear };
