@@ -42,6 +42,7 @@ const createNewYear = async (req, res) => {
         DT: '', //data
       });
     }
+
     const result = await prisma.academicyears.create({
       data: {
         year: new Date(year),

@@ -8,12 +8,13 @@ datasource db {
 }
 
 model academicyears {
-  id          Int           @id @default(autoincrement())
-  year        DateTime?     @db.Date
-  createdAt   DateTime      @db.DateTime(0)
-  updatedAt   DateTime      @db.DateTime(0)
-  articles    articles[]
-  closeddates closeddates[]
+  id        Int        @id @default(autoincrement())
+  year      DateTime?  @db.Date
+  createdAt DateTime   @db.DateTime(0)
+  updatedAt DateTime   @db.DateTime(0)
+  articles  articles[]
+
+  topic topic[]
 }
 
 model articles {
@@ -32,6 +33,8 @@ model articles {
   users            users?                 @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "articles_ibfk_1")
   faculties        faculties?             @relation(fields: [facultyId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "articles_ibfk_2")
   academicyears    academicyears?         @relation(fields: [academicYearId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "articles_ibfk_3")
+  topic            topic?                 @relation(fields: [topicId], references: [id])
+  topicId          Int?
 
   @@index([academicYearId], map: "academicYearId")
   @@index([facultyId], map: "facultyId")
@@ -39,27 +42,23 @@ model articles {
 }
 
 model closeddates {
-  id             Int            @id @default(autoincrement())
-  closingDate    DateTime?      @db.Date
-  academicYearId Int?
-  facultyId      Int?
-  createdAt      DateTime       @db.DateTime(0)
-  updatedAt      DateTime       @db.DateTime(0)
-  academicyears  academicyears? @relation(fields: [academicYearId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "closeddates_ibfk_1")
-  faculties      faculties?     @relation(fields: [facultyId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "closeddates_ibfk_2")
-
-  @@index([academicYearId], map: "academicYearId")
-  @@index([facultyId], map: "facultyId")
+  id          Int       @id @default(autoincrement())
+  closingDate DateTime? @db.Date
+  createdAt   DateTime  @default(now()) @db.DateTime(0)
+  updatedAt   DateTime  @updatedAt @db.DateTime(0)
+  topic       topic?    @relation(fields: [topicId], references: [id])
+  topicId     Int?
 }
 
 model faculties {
-  id          Int           @id @default(autoincrement())
-  name        String?       @db.VarChar(255)
-  createdAt   DateTime      @db.DateTime(0)
-  updatedAt   DateTime      @db.DateTime(0)
-  articles    articles[]
-  closeddates closeddates[]
-  users       users[]
+  id        Int        @id @default(autoincrement())
+  name      String?    @db.VarChar(255)
+  createdAt DateTime   @db.DateTime(0)
+  updatedAt DateTime   @db.DateTime(0)
+  articles  articles[]
+
+  users users[]
+  topic topic[]
 }
 
 model grouproles {
@@ -109,6 +108,23 @@ model users {
 
   @@index([groupId], map: "groupId")
   @@index([facultyId], map: "users_facultyId_fkey")
+}
+
+model topic {
+  id             Int            @id @default(autoincrement())
+  name           String?        @db.VarChar(255)
+  description    String?        @db.VarChar(255)
+  facultyId      Int?
+  academicYearId Int?
+  createdAt      DateTime       @default(now()) @db.DateTime(0)
+  updatedAt      DateTime       @updatedAt @db.DateTime(0)
+  faculty        faculties?     @relation(fields: [facultyId], references: [id])
+  academicyear   academicyears? @relation(fields: [academicYearId], references: [id])
+  articles       articles[]
+  closeddates    closeddates[]
+
+  @@index([facultyId], map: "facultyId")
+  @@index([academicYearId], map: "academicYearId")
 }
 
 enum articles_reviewStatus {

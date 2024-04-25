@@ -4,28 +4,16 @@ import { withAccelerate } from '@prisma/extension-accelerate';
 const prisma = new PrismaClient().$extends(withAccelerate());
 
 const createNewCloseDates = async (req, res) => {
-  const newCloseDate = new Date(req.body.date);
-  console.log(newCloseDate);
-  const academicYearId = parseInt(req.body.acaYearId);
-  const facultyId = parseInt(req.body.facultyId);
+  const { date, topicId } = req.body;
   try {
-    const existingFac = await prisma.closeddates.findFirst({ where: { facultyId: facultyId } });
-    if (existingFac) {
-      return res.status(400).send('Deadline for this faculty existed');
+    const result = await prisma.closeddates.create({
+      data: { closingDate: new Date(date), topicId: parseInt(topicId) },
+    });
+    if (result) {
+      console.log(result);
+      return res.status(200).send(result);
     }
-    const closeDate = await prisma.closeddates.create({
-      data: {
-        closingDate: newCloseDate,
-        academicYearId: academicYearId,
-        facultyId: facultyId,
-        createdAt: new Date(),
-        updatedAt: new Date(0),
-      },
-    });
-    return res.status(200).json({
-      msg: 'Create new year success',
-      data: closeDate,
-    });
+    return res.status(400).send('Create deadline for topic failed');
   } catch (error) {
     throw error;
   }
@@ -48,20 +36,21 @@ const fetchAllCloseDates = async (req, res) => {
   }
 };
 
-const fetchingFacultyCloseDate = async (req, res) => {
-  const facultyId = req.params.id;
+const fetchingTopicCloseDate = async (req, res) => {
+  const topicId = req.params.id;
   try {
-    if (facultyId) {
-      const existingFac = await prisma.faculties.findUnique({ where: { id: parseInt(facultyId) } });
-      if (existingFac) {
-        const closeDate = await prisma.closeddates.findFirst({ where: { facultyId: parseInt(facultyId) } });
+    if (topicId) {
+      const existingTopic = await prisma.topic.findUnique({ where: { id: parseInt(topicId) } });
+      if (existingTopic) {
+        const closeDate = await prisma.closeddates.findFirst({ where: { topicId: parseInt(topicId) } });
         return res.status(200).send(closeDate);
       } else {
         return res.status(400).send('Server Error');
       }
     }
   } catch (error) {
-    throw error;
+    // throw error;
+    return res.status(400).send('Server Error');
   }
 };
 
@@ -82,4 +71,4 @@ const deleteCloseDates = async (req, res) => {
   }
 };
 
-export { fetchAllCloseDates, createNewCloseDates, deleteCloseDates, updateCloseDates, fetchingFacultyCloseDate };
+export { fetchAllCloseDates, createNewCloseDates, deleteCloseDates, updateCloseDates, fetchingTopicCloseDate };

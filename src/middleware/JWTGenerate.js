@@ -43,6 +43,8 @@ const verifyToken = (req, res, next) => {
       } else if (payload.group === 'Marketing Coordinator') {
         // console.log('student');
         next();
+      } else if (payload.group === 'Marketing Manager') {
+        next();
       }
     });
   } catch (error) {

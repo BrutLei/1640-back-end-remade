@@ -87,9 +87,8 @@ const fetchAllUserArticle = async (req, res) => {
 
 const createNewArticle = async (req, res) => {
   if (req.files) {
-    console.log('\nUpload successfully ->>> ', req.files.file[0].path);
-    console.log('\nUpload successfully ->>> ', req.files.image[0].path);
-
+    // console.log('\nUpload successfully ->>> ', req.files.file[0].path);
+    // console.log('\nUpload successfully ->>> ', req.files.image[0].path);
     // return res.status(200).send(req.files.image[0].path);
   }
   let articleDescription = req.body.desc;

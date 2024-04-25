@@ -7,7 +7,7 @@ import group_route from './routes/groupRoute.js';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import article_route from './routes/articleRoute.js';
-import path, { dirname } from 'path';
+import topic_route from './routes/topicRoute.js';
 
 const port = 8080;
 const app = express();
@@ -35,6 +35,10 @@ app.use('/closedates', close_date_route);
 // Group route
 /**url: port/groups/... */
 app.use('/groups', group_route);
+
+// Topic route
+/**url: port/topics/... */
+app.use('/topics', topic_route);
 
 // Article route
 /**url: port/groups/... */
