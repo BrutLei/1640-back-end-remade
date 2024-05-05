@@ -12,7 +12,7 @@ import topic_route from './routes/topicRoute.js';
 const port = 8080;
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: 'https://one640-back-end-remade.onrender.com/users/login', credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
