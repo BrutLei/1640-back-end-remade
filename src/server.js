@@ -12,7 +12,7 @@ import topic_route from './routes/topicRoute.js';
 const port = 8080;
 const app = express();
 
-app.use(cors({ origin: 'http://https://1640-web-project-fe-remade.vercel.app/', credentials: true }));
+app.use(cors({ origin: 'http://https://1640-web-project-fe-remade.vercel.app', credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
