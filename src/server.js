@@ -27,6 +27,7 @@ app.use(
       }
     },
     credentials: true, // Enable credentials
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
   }),
 );
 
