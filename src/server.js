@@ -17,19 +17,18 @@ const allowedOrigins = [
   'https://1640-web-project-fe-remade.vercel.app/',
 ];
 
+const corsOptionsDelegate = function (req, callback) {
+  var corsOptions;
+  if (allowlist.indexOf(req.header('Origin')) !== -1) {
+    corsOptions = { origin: true }; // reflect (enable) the requested origin in the CORS response
+  } else {
+    corsOptions = { origin: false }; // disable CORS for this request
+  }
+  callback(null, corsOptions); // callback expects two parameters: error and options
+};
+
 app.options('*', cors());
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true,
-  }),
-);
+app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 
