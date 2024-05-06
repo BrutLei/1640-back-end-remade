@@ -12,6 +12,11 @@ import topic_route from './routes/topicRoute.js';
 const port = 8080;
 const app = express();
 
+const allowedOrigins = [
+  'https://1640-web-project-fe-remade-brutleis-projects.vercel.app/',
+  'https://1640-web-project-fe-remade.vercel.app/',
+];
+
 app.options('*', cors());
 app.use(
   cors({
