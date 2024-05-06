@@ -29,6 +29,9 @@ app.use(
     credentials: true, // Enable credentials
   }),
 );
+
+app.options('*', cors());
+
 app.use(express.json());
 app.use(cookieParser());
 
