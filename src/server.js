@@ -13,8 +13,11 @@ const port = 8080;
 const app = express();
 
 const allowedOrigins = [
+  'https://1640-web-project-fe-remade.vercel.app/',
   'https://1640-web-project-fe-remade-brutleis-projects.vercel.app/',
   'https://1640-web-project-fe-remade.vercel.app/',
+  'https://1640-web-project-fe-remade-cre2dbtfw-brutleis-projects.vercel.app/',
+  'https://1640-web-project-fe-remade-git-main-brutleis-projects.vercel.app/',
 ];
 app.use(
   cors({
